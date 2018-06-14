@@ -1,0 +1,37 @@
+Question 1:
+db.restaurants.aggregate(
+	[
+		{$group: {"_id": "$cuisine", "count": {$sum: 1}}},
+		{$sort : {"count" : -1}},
+		{$limit: 1}
+	]
+)
+
+Question 2:
+db.restaurants.aggregate(
+[
+	{$match:{"borough": {$ne: "Missing" }}},
+	{$group:{"_id": "$borough", "total" : {$sum:1}, "sub" : {$sum: {$cond: [{$eq: ["$cuisine", "American "]}, 1, 0]}} } },
+	{$project:{borough:1, total:1, sub:1, Percent: {$multiply: [ {$divide: [ "$sub", "$total" ]}, 100 ]} }},
+	{$sort:{Percent:-1}}
+])
+
+Question 3:
+db.restaurants.aggregate(
+[
+	{$match:{"borough": "Bronx", "address.zipcode": {$ne: "" }}},
+	{$group:{"_id": "$address.zipcode", "Total_Resturants" : {$sum:1}, "Are_American" : {$sum: {$cond: [{$eq: ["$cuisine", "American "]}, 1, 0]}} } },
+	{$project:{address:1, zipcode:1, Total_Resturants:1, Are_American:1, Percent: {$multiply: [ {$divide: [ "$Are_American", "$Total_Resturants" ]}, 100 ]} }},
+	{$sort:{Total_Resturants: -1}},
+	{$limit: 5}
+])
+
+Question 4:
+db.restaurants.aggregate(
+[
+	{$unwind: "$grades"},
+	{$match:{"borough": "Bronx", "address.zipcode": "10467", "cuisine": "American ", "grades": {$gt: {$size: 4 } } } },
+	{$group:{"_id": "$name", "averageScore" : {$avg: "$grades.score"}, "count": {$sum: 1} } },
+	{$sort:{count:-1}},
+	{$limit: 3}
+])

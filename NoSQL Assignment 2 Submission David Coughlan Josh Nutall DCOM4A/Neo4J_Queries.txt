@@ -1,0 +1,44 @@
+
+
+//Question 1---------------------------------------------------------------------------
+// Find the most popular cuisine
+//-------------------------------------------------------------------------------------
+MATCH (n:restaurants) WITH count(*) AS total
+MATCH (n:restaurants) WHERE n:restaurants 
+RETURN n.cuisine as MostPopularCuisine,count(n) as NumOfPopularCuisineRestaurants, (toFloat(count(*))/total) AS percentage
+ORDER BY count(n) DESC LIMIT 1
+
+//Question 2-----------------------------------------------------------------------------
+// Find the borough with the smallest ratio of the popular cuisine
+//---------------------------------------------------------------------------------------
+
+MATCH (n:restaurants)
+WHERE n.cuisine = 'American ' AND n.borough <> "Missing"
+WITH count(*) AS total
+MATCH (n:restaurants)
+WHERE n.cuisine = "American " AND n.borough <> "Missing"
+RETURN n.borough as borough,count(*) as num_of_popular_cuisine_in_bourough, (toFloat(count(*)) / total) * 100 as percentage
+ORDER BY count(*)  LIMIT 1
+
+//Question 3-----------------------------------------------------------------------------
+// Pick the zipcode that has the smallest ratio
+//---------------------------------------------------------------------------------------
+
+MATCH (restaurants:restaurants)-[rel:restaurants_address]->(address) 
+WHERE restaurants.borough = 'Staten Island'  WITH count(*) AS total
+MATCH (restaurants)-[rel:restaurants_address]->(address) 
+WHERE restaurants.cuisine = 'American ' AND restaurants.borough = 'Staten Island'
+WITH address.zipcode AS zipcode, count(*) AS counter, total, (toFloat(count(*))/total)*100 AS percentage
+ORDER BY counter DESC limit 5
+RETURN zipcode, counter, total, percentage
+ORDER BY percentage ASC limit 1
+
+//Question 4-----------------------------------------------------------------------------
+// Three biggest competitors in the zip code with the same cuisine
+//---------------------------------------------------------------------------------------
+
+UNWIND ["grades"] AS grades
+MATCH (restaurants:restaurants)-[rel:restaurants_address]->(address)
+WHERE restaurants.borough = "Staten Island" AND address.zipcode = "10312" AND restaurants.cuisine = "American " AND grades > 4
+RETURN restaurants.name AS NAME,avg(grades.score) AS AVERAGE, count(*) AS COUNT
+ORDER BY COUNT LIMIT 3
